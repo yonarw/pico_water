@@ -1,0 +1,12 @@
+# Generated build output
+build/
+
+# User config with WiFi credentials and pin assignments — never commit this
+config.h
+
+# Nix direnv
+.direnv/
+
+# Editor
+.vscode/
+*.swp
