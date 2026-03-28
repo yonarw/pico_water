@@ -6,6 +6,7 @@
 #include "gpio_control.h"
 #include "rest_api.h"
 #include "led.h"
+#include "lwip/netif.h"
 
 static bool tick_callback(repeating_timer_t *rt) {
     (void)rt;
@@ -27,6 +28,7 @@ int main(void) {
     }
     led_init();
     cyw43_arch_enable_sta_mode();
+    netif_set_hostname(netif_default, HOSTNAME);
 
     printf("pico_water: connecting to WiFi...\n");
     if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD,
@@ -45,7 +47,9 @@ int main(void) {
 
     while (true) {
         cyw43_arch_poll();
-        led_tick(to_ms_since_boot(get_absolute_time()));
+        uint32_t now = to_ms_since_boot(get_absolute_time());
+        led_tick(now);
+        rest_api_tick(now);
         sleep_ms(1);
     }
 }

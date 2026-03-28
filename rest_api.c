@@ -3,6 +3,7 @@
 #include "led.h"
 
 #include "lwip/tcp.h"
+#include "pico/time.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -10,33 +11,52 @@
 #define MAX_CONNS     4
 #define REQ_BUF_SIZE 512
 
+#define CONN_TIMEOUT_MS 5000
+
 typedef struct {
     struct tcp_pcb *pcb;
     char            buf[REQ_BUF_SIZE];
     uint16_t        len;
     bool            in_use;
+    uint32_t        opened_at_ms;
 } http_conn_t;
 
 static http_conn_t conns[MAX_CONNS];
+
+static void free_conn(http_conn_t *c) {
+    c->in_use = false;
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-static http_conn_t *alloc_conn(struct tcp_pcb *pcb) {
+static http_conn_t *alloc_conn(struct tcp_pcb *pcb, uint32_t now_ms) {
     for (int i = 0; i < MAX_CONNS; i++) {
         if (!conns[i].in_use) {
-            conns[i].pcb    = pcb;
-            conns[i].len    = 0;
-            conns[i].in_use = true;
+            conns[i].pcb         = pcb;
+            conns[i].len         = 0;
+            conns[i].in_use      = true;
+            conns[i].opened_at_ms = now_ms;
             return &conns[i];
         }
     }
     return NULL;
 }
 
-static void free_conn(http_conn_t *c) {
-    c->in_use = false;
+void rest_api_tick(uint32_t now_ms) {
+    for (int i = 0; i < MAX_CONNS; i++) {
+        if (!conns[i].in_use) continue;
+        if ((int32_t)(now_ms - conns[i].opened_at_ms) > CONN_TIMEOUT_MS) {
+            printf("rest_api: closing stale connection\n");
+            tcp_arg(conns[i].pcb, NULL);
+            tcp_recv(conns[i].pcb, NULL);
+            tcp_sent(conns[i].pcb, NULL);
+            tcp_err(conns[i].pcb, NULL);
+            tcp_abort(conns[i].pcb);
+            free_conn(&conns[i]);
+        }
+    }
 }
 
 static valve_id_t find_valve(const char *name) {
@@ -57,7 +77,7 @@ static void send_response(struct tcp_pcb *tpcb, int status, const char *body) {
         "\r\n"
         "%s",
         status,
-        status == 200 ? "OK" : (status == 404 ? "Not Found" : "Bad Request"),
+        status == 200 ? "OK" : status == 404 ? "Not Found" : status == 503 ? "Service Unavailable" : "Bad Request",
         blen, body);
     tcp_write(tpcb, resp, (u16_t)rlen, TCP_WRITE_FLAG_COPY);
     tcp_output(tpcb);
@@ -117,7 +137,10 @@ static void handle_request(http_conn_t *conn) {
         }
         body += 4;
         if (strncmp(body, "on", 2) == 0) {
-            valve_turn_on(id);
+            if (!valve_turn_on(id)) {
+                send_response(conn->pcb, 503, "too many active valves");
+                return;
+            }
             led_notify_request();
             send_response(conn->pcb, 200, "ok");
         } else if (strncmp(body, "off", 3) == 0) {
@@ -187,7 +210,8 @@ static err_t http_accept(void *arg, struct tcp_pcb *new_pcb, err_t err) {
 
     tcp_setprio(new_pcb, TCP_PRIO_MIN);
 
-    http_conn_t *conn = alloc_conn(new_pcb);
+    uint32_t now_ms = to_ms_since_boot(get_absolute_time());
+    http_conn_t *conn = alloc_conn(new_pcb, now_ms);
     if (!conn) {
         tcp_abort(new_pcb);
         return ERR_ABRT;

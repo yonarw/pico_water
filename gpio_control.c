@@ -4,16 +4,19 @@
 #include "hardware/gpio.h"
 #include <stdio.h>
 
-static const uint valve_pins[VALVE_COUNT] = {
-    PIN_RASEN_1, PIN_RASEN_2, PIN_BEETE_1, PIN_BEETE_2
-};
-
-const char *valve_names[VALVE_COUNT] = {
-    "rasen_1", "rasen_2", "beete_1", "beete_2"
-};
+static const uint valve_pins[VALVE_COUNT] = VALVE_PINS;
+const char *valve_names[VALVE_COUNT] = VALVE_NAMES;
 
 static int32_t  valve_status[VALVE_COUNT];
-static uint32_t valve_runtime[VALVE_COUNT];  // seconds elapsed since turned on
+static uint32_t valve_runtime[VALVE_COUNT];
+
+static int count_active(void) {
+    int n = 0;
+    for (int i = 0; i < VALVE_COUNT; i++) {
+        if (valve_status[i] != VALVE_STATUS_OFF) n++;
+    }
+    return n;
+}
 
 void gpio_control_init(void) {
     for (int i = 0; i < VALVE_COUNT; i++) {
@@ -26,18 +29,28 @@ void gpio_control_init(void) {
     printf("gpio_control: initialized %d valves\n", VALVE_COUNT);
 }
 
-void valve_turn_on(valve_id_t id) {
+bool valve_turn_on(valve_id_t id) {
+    if (valve_status[id] == VALVE_STATUS_OFF && count_active() >= MAX_ACTIVE_VALVES) {
+        printf("valve %s: ON denied, max simultaneous valves (%d) reached\n", valve_names[id], MAX_ACTIVE_VALVES);
+        return false;
+    }
     valve_status[id]  = VALVE_STATUS_PERMANENT;
     valve_runtime[id] = 0;
     gpio_put(valve_pins[id], 1);
     printf("valve %s: ON (permanent)\n", valve_names[id]);
+    return true;
 }
 
-void valve_turn_on_timed(valve_id_t id, int32_t seconds) {
+bool valve_turn_on_timed(valve_id_t id, int32_t seconds) {
+    if (valve_status[id] == VALVE_STATUS_OFF && count_active() >= MAX_ACTIVE_VALVES) {
+        printf("valve %s: ON denied, max simultaneous valves (%d) reached\n", valve_names[id], MAX_ACTIVE_VALVES);
+        return false;
+    }
     valve_status[id]  = seconds;
     valve_runtime[id] = 0;
     gpio_put(valve_pins[id], 1);
     printf("valve %s: ON for %d s\n", valve_names[id], seconds);
+    return true;
 }
 
 void valve_turn_off(valve_id_t id) {

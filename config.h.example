@@ -2,12 +2,16 @@
 
 #define WIFI_SSID     "YOUR_SSID"
 #define WIFI_PASSWORD "YOUR_PASSWORD"
+#define HOSTNAME      "pico-water"
 
-// GPIO pin assignments.
+// Number of valves/ports. Must match the lengths of VALVE_PINS and VALVE_NAMES.
 // On Pico W, GP23/GP24/GP25/GP29 are reserved for the CYW43 WiFi chip.
-#define PIN_RASEN_1  22
-#define PIN_RASEN_2   3
-#define PIN_BEETE_1  27
-#define PIN_BEETE_2  17
+#define VALVE_COUNT 4
+#define VALVE_PINS  { 22, 3, 27, 17 }
+#define VALVE_NAMES { "rasen_1", "rasen_2", "beete_1", "beete_2" }
+
+// Maximum number of valves that may be active simultaneously.
+// E.g. limited by available water pressure and PSU current capacity.
+#define MAX_ACTIVE_VALVES 2
 
 #define MAX_RUNTIME_SECONDS (10 * 60)

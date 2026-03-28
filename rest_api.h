@@ -1,4 +1,6 @@
 #pragma once
 
-// Start listening on HTTP_PORT. Call after WiFi is connected.
+#include <stdint.h>
+
 void rest_api_init(void);
+void rest_api_tick(uint32_t now_ms);

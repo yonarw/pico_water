@@ -23,7 +23,10 @@
         pkgs.python3   # pico-sdk scripts require python
       ];
 
-      PICO_SDK_PATH = pico-sdk;
+      PICO_SDK_PATH    = pico-sdk;
+      # Explicit ARM toolchain path so pico-sdk's find_compiler.cmake resolves
+      # arm-none-eabi-gcc before CMake's native compiler detection runs.
+      PICO_TOOLCHAIN_PATH = "${pkgs.gcc-arm-embedded}/bin";
 
       shellHook = ''
         echo "pico_water dev shell ready"

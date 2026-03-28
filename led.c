@@ -35,10 +35,12 @@ void led_notify_request(void) {
     request_queued = true;
 }
 
+#define after(now, deadline) ((int32_t)((now) - (deadline)) >= 0)
+
 void led_tick(uint32_t now_ms) {
     switch (state) {
         case STATE_HEARTBEAT:
-            if (now_ms < state_until) break;
+            if (!after(now_ms, state_until)) break;
 
             if (request_queued) {
                 request_queued = false;
@@ -46,37 +48,36 @@ void led_tick(uint32_t now_ms) {
                 state       = STATE_BLINK1_ON;
                 state_until = now_ms + BLINK_PULSE_MS;
             } else {
-                // Short heartbeat pulse
                 bool currently_on = (now_ms % HEARTBEAT_PERIOD) < HEARTBEAT_ON_MS;
                 set_led(currently_on);
             }
             break;
 
         case STATE_BLINK1_ON:
-            if (now_ms < state_until) break;
+            if (!after(now_ms, state_until)) break;
             set_led(false);
             state       = STATE_BLINK1_OFF;
             state_until = now_ms + BLINK_GAP_MS;
             break;
 
         case STATE_BLINK1_OFF:
-            if (now_ms < state_until) break;
+            if (!after(now_ms, state_until)) break;
             set_led(true);
             state       = STATE_BLINK2_ON;
             state_until = now_ms + BLINK_PULSE_MS;
             break;
 
         case STATE_BLINK2_ON:
-            if (now_ms < state_until) break;
+            if (!after(now_ms, state_until)) break;
             set_led(false);
             state       = STATE_BLINK2_OFF;
             state_until = now_ms + BLINK_GAP_MS;
             break;
 
         case STATE_BLINK2_OFF:
-            if (now_ms < state_until) break;
+            if (!after(now_ms, state_until)) break;
             state       = STATE_HEARTBEAT;
-            state_until = 0;
+            state_until = now_ms;  // already elapsed — proceed on next tick
             break;
     }
 }
