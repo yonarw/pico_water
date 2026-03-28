@@ -4,18 +4,26 @@ Garden irrigation controller for the Raspberry Pi Pico W. Exposes a minimal HTTP
 
 ## Hardware
 
-| Valve     | GPIO pin |
-|-----------|----------|
-| `rasen_1` | GP2      |
-| `rasen_2` | GP3      |
-| `beete_1` | GP4      |
-| `beete_2` | GP5      |
+Valve count, GPIO pins, and names are freely configurable in `config.h`:
 
-Pins and WiFi credentials are configured in `config.h` (not tracked by git — see setup below). GP23/24/25/29 are reserved by the CYW43 WiFi chip and must not be used.
+```c
+#define VALVE_COUNT 4
+#define VALVE_PINS  { 2, 3, 4, 5 }
+#define VALVE_NAMES { "rasen_1", "rasen_2", "beete_1", "beete_2" }
+```
 
-Each valve is protected by a 10-minute maximum runtime (`MAX_RUNTIME_SECONDS`) enforced in hardware regardless of API state.
+GP23/24/25/29 are reserved by the CYW43 WiFi chip and must not be used. Up to the number of usable GP pins is supported.
 
-The onboard LED signals activity:
+`MAX_ACTIVE_VALVES` limits how many valves may be open simultaneously (water pressure / PSU current). A `POST on` that would exceed this limit returns HTTP 503.
+
+WiFi credentials and LAN hostname are also set in `config.h` (not tracked by git — see setup below).
+
+## Safety
+
+Each valve has a maximum runtime (`MAX_RUNTIME_SECONDS`, default 10 min). Enforcement runs in a hardware timer IRQ — independent of the network stack, LED logic, and the main loop. A frozen WiFi connection or hung HTTP request cannot prevent a valve from being cut off.
+
+## LED
+
 - **Slow single pulse** (100 ms on / 900 ms off) — heartbeat, device is running
 - **Double-blink** — triggered on every incoming HTTP request
 
@@ -67,21 +75,6 @@ experimental-features = nix-command flakes
    ```sh
    mkdir -p build && cd build
    cmake -G Ninja ..
-   ninja
-   ```
-
-   The firmware will be at `build/pico_water.uf2`.
-
-### Flashing
-
-Hold the **BOOTSEL** button on the Pico W, plug it in via USB, then copy the `.uf2` file to the mounted drive:
-
-```sh
-cp build/pico_water.uf2 /run/media/$USER/RPI-RP2/
-```
-
-The board reboots automatically and connects to WiFi. Serial output (USB) shows connection status.
-
    ninja
    ```
 
