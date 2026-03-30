@@ -14,7 +14,7 @@ Valve count, GPIO pins, and names are freely configurable in `config.h`:
 
 GP23/24/25/29 are reserved by the CYW43 WiFi chip and must not be used. Up to the number of usable GP pins is supported.
 
-`MAX_ACTIVE_VALVES` limits how many valves may be open simultaneously (water pressure / PSU current). A `POST on` that would exceed this limit returns HTTP 503.
+`MAX_ACTIVE_VALVES` limits how many valves may be open simultaneously (water pressure / PSU current). A `POST on` that would exceed this limit is **rejected with HTTP 503** — already-active valves are not affected.
 
 WiFi credentials and LAN hostname are also set in `config.h` (not tracked by git — see setup below).
 
