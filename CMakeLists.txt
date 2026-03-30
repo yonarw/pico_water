@@ -16,6 +16,7 @@ add_executable(pico_water
     gpio_control.c
     rest_api.c
     led.c
+    wifi_manager.c
 )
 
 target_include_directories(pico_water PRIVATE ${CMAKE_CURRENT_LIST_DIR})
