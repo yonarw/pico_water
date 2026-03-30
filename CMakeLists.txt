@@ -22,16 +22,19 @@ if(NOT GIT_VERSION)
 endif()
 
 add_executable(pico_water
-    main.c
-    gpio_control.c
-    rest_api.c
-    led.c
-    wifi_manager.c
-    status.c
-    log_buffer.c
+    src/main.c
+    src/gpio_control.c
+    src/rest_api.c
+    src/led.c
+    src/wifi_manager.c
+    src/status.c
+    src/log_buffer.c
 )
 
-target_include_directories(pico_water PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+target_include_directories(pico_water PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}        # config.h, lwipopts.h
+    ${CMAKE_CURRENT_LIST_DIR}/src    # module headers
+)
 
 target_compile_definitions(pico_water PRIVATE FW_VERSION="${GIT_VERSION}")
 
