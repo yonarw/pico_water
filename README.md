@@ -29,10 +29,32 @@ Each valve has a maximum runtime (`MAX_RUNTIME_SECONDS`, default 10 min). Enforc
 
 ## API
 
+### Switch control
+
 | Method | Path                     | Body        | Response       |
 |--------|--------------------------|-------------|----------------|
 | POST   | `/switch/<name>`         | `on` / `off`| `ok`           |
 | GET    | `/switch/state/<name>`   | —           | `on` / `off`   |
+
+### Status
+
+`GET /status` returns a JSON object:
+
+```json
+{"version":"1.0.0","uptime_s":3600,"rssi_dbm":-52,"temp_c":28.4,"active_valves":1}
+```
+
+| Field           | Description                              |
+|-----------------|------------------------------------------|
+| `version`       | Firmware version (`git describe`)        |
+| `uptime_s`      | Seconds since last boot                  |
+| `rssi_dbm`      | WiFi signal strength                     |
+| `temp_c`        | RP2040 internal temperature (±5 °C)      |
+| `active_valves` | Number of currently open valves          |
+
+### Debug log
+
+`GET /log` returns the last 512 bytes of serial output as plain text. Useful for diagnosing issues without a USB connection.
 
 ### Home Assistant config example
 
@@ -44,6 +66,33 @@ switch:
     state_resource: http://<pico-ip>/switch/state/rasen_1
     body_on: "on"
     body_off: "off"
+
+# One HTTP poll, multiple typed sensors via template
+sensor:
+  - platform: rest
+    resource: http://<pico-ip>/status
+    name: Pico Water Status
+    value_template: "ok"
+    json_attributes:
+      - version
+      - uptime_s
+      - rssi_dbm
+      - temp_c
+      - active_valves
+
+template:
+  - sensor:
+      - name: Pico Water Uptime
+        state: "{{ state_attr('sensor.pico_water_status', 'uptime_s') }}"
+        unit_of_measurement: "s"
+        device_class: duration
+      - name: Pico Water RSSI
+        state: "{{ state_attr('sensor.pico_water_status', 'rssi_dbm') }}"
+        unit_of_measurement: "dBm"
+      - name: Pico Water Temperature
+        state: "{{ state_attr('sensor.pico_water_status', 'temp_c') }}"
+        unit_of_measurement: "°C"
+        device_class: temperature
 ```
 
 ## Build

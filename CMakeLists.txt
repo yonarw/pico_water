@@ -11,19 +11,34 @@ set(CMAKE_C_STANDARD 11)
 
 pico_sdk_init()
 
+execute_process(
+    COMMAND git -C ${CMAKE_CURRENT_LIST_DIR} describe --tags --always --dirty
+    OUTPUT_VARIABLE GIT_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+)
+if(NOT GIT_VERSION)
+    set(GIT_VERSION "unknown")
+endif()
+
 add_executable(pico_water
     main.c
     gpio_control.c
     rest_api.c
     led.c
     wifi_manager.c
+    status.c
+    log_buffer.c
 )
 
 target_include_directories(pico_water PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
+target_compile_definitions(pico_water PRIVATE FW_VERSION="${GIT_VERSION}")
+
 target_link_libraries(pico_water
     pico_stdlib
     pico_cyw43_arch_lwip_threadsafe_background
+    hardware_adc
 )
 
 # Output over USB serial; disable UART to keep pin 0/1 free

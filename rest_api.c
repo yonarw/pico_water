@@ -1,6 +1,8 @@
 #include "rest_api.h"
 #include "gpio_control.h"
 #include "led.h"
+#include "status.h"
+#include "log_buffer.h"
 
 #include "lwip/tcp.h"
 #include "pico/time.h"
@@ -66,21 +68,34 @@ static valve_id_t find_valve(const char *name) {
     return (valve_id_t)-1;
 }
 
-static void send_response(struct tcp_pcb *tpcb, int status, const char *body) {
-    char resp[256];
-    int  blen = (int)strlen(body);
-    int  rlen = snprintf(resp, sizeof(resp),
+static const char *status_reason(int status) {
+    switch (status) {
+        case 200: return "OK";
+        case 404: return "Not Found";
+        case 503: return "Service Unavailable";
+        default:  return "Bad Request";
+    }
+}
+
+static void send_response_impl(struct tcp_pcb *tpcb, int status,
+                               const char *content_type,
+                               const char *body, int blen) {
+    char hdr[128];
+    int hlen = snprintf(hdr, sizeof(hdr),
         "HTTP/1.1 %d %s\r\n"
-        "Content-Type: text/plain\r\n"
+        "Content-Type: %s\r\n"
         "Content-Length: %d\r\n"
         "Connection: close\r\n"
-        "\r\n"
-        "%s",
-        status,
-        status == 200 ? "OK" : status == 404 ? "Not Found" : status == 503 ? "Service Unavailable" : "Bad Request",
-        blen, body);
-    tcp_write(tpcb, resp, (u16_t)rlen, TCP_WRITE_FLAG_COPY);
+        "\r\n",
+        status, status_reason(status), content_type, blen);
+    tcp_write(tpcb, hdr, (u16_t)hlen, TCP_WRITE_FLAG_COPY | TCP_WRITE_FLAG_MORE);
+    if (blen > 0)
+        tcp_write(tpcb, body, (u16_t)blen, TCP_WRITE_FLAG_COPY);
     tcp_output(tpcb);
+}
+
+static void send_response(struct tcp_pcb *tpcb, int status, const char *body) {
+    send_response_impl(tpcb, status, "text/plain", body, (int)strlen(body));
 }
 
 // ---------------------------------------------------------------------------
@@ -150,6 +165,23 @@ static void handle_request(http_conn_t *conn) {
         } else {
             send_response(conn->pcb, 400, "expected 'on' or 'off'");
         }
+        return;
+    }
+
+    // Route: GET /status
+    if (is_get && strcmp(path, "/status") == 0) {
+        char json[256];
+        status_get_json(json, sizeof(json));
+        send_response_impl(conn->pcb, 200, "application/json", json, (int)strlen(json));
+        return;
+    }
+
+    // Route: GET /log
+    if (is_get && strcmp(path, "/log") == 0) {
+        static char snap[LOG_BUFFER_SIZE];
+        size_t snap_len;
+        log_buffer_snapshot(snap, &snap_len);
+        send_response_impl(conn->pcb, 200, "text/plain", snap, (int)snap_len);
         return;
     }
 

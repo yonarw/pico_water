@@ -18,5 +18,7 @@ void    valve_turn_off(valve_id_t id);
 void    valve_turn_off_all(void);
 int32_t valve_get_status(valve_id_t id);
 
+int     valve_active_count(void);
+
 // Call once per second from the main tick
 void valve_tick(void);

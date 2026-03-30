@@ -7,6 +7,8 @@
 #include "rest_api.h"
 #include "led.h"
 #include "wifi_manager.h"
+#include "status.h"
+#include "log_buffer.h"
 #include "lwip/netif.h"
 
 static bool tick_callback(repeating_timer_t *rt) {
@@ -17,6 +19,7 @@ static bool tick_callback(repeating_timer_t *rt) {
 
 int main(void) {
     stdio_init_all();
+    log_buffer_init();
     sleep_ms(2000);  // allow USB serial to enumerate before first printf
 
     printf("pico_water: starting\n");
@@ -34,6 +37,7 @@ int main(void) {
     if (!wifi_manager_init())
         return 1;
 
+    status_init();
     rest_api_init();
 
     repeating_timer_t timer;

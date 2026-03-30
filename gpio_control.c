@@ -10,7 +10,7 @@ const char *valve_names[VALVE_COUNT] = VALVE_NAMES;
 static int32_t  valve_status[VALVE_COUNT];
 static uint32_t valve_runtime[VALVE_COUNT];
 
-static int count_active(void) {
+int valve_active_count(void) {
     int n = 0;
     for (int i = 0; i < VALVE_COUNT; i++) {
         if (valve_status[i] != VALVE_STATUS_OFF) n++;
@@ -30,7 +30,7 @@ void gpio_control_init(void) {
 }
 
 bool valve_turn_on(valve_id_t id) {
-    if (valve_status[id] == VALVE_STATUS_OFF && count_active() >= MAX_ACTIVE_VALVES) {
+    if (valve_status[id] == VALVE_STATUS_OFF && valve_active_count() >= MAX_ACTIVE_VALVES) {
         printf("valve %s: ON denied, max simultaneous valves (%d) reached\n", valve_names[id], MAX_ACTIVE_VALVES);
         return false;
     }
@@ -42,7 +42,7 @@ bool valve_turn_on(valve_id_t id) {
 }
 
 bool valve_turn_on_timed(valve_id_t id, int32_t seconds) {
-    if (valve_status[id] == VALVE_STATUS_OFF && count_active() >= MAX_ACTIVE_VALVES) {
+    if (valve_status[id] == VALVE_STATUS_OFF && valve_active_count() >= MAX_ACTIVE_VALVES) {
         printf("valve %s: ON denied, max simultaneous valves (%d) reached\n", valve_names[id], MAX_ACTIVE_VALVES);
         return false;
     }
