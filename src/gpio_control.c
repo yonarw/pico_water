@@ -78,7 +78,7 @@ void valve_tick(void) {
 
         valve_runtime[i]++;
 
-        if (valve_runtime[i] >= (uint32_t)MAX_RUNTIME_SECONDS) {
+        if (valve_runtime[i] >= (uint32_t)MAX_VALVE_ACTIVE_SECONDS) {
             printf("valve %s: MAX_RUNTIME exceeded, forcing off\n", valve_names[i]);
             valve_turn_off((valve_id_t)i);
             continue;

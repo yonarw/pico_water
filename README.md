@@ -20,7 +20,9 @@ WiFi credentials and LAN hostname are also set in `config.h` (not tracked by git
 
 ## Safety
 
-Each valve has a maximum runtime (`MAX_RUNTIME_SECONDS`, default 10 min). Enforcement runs in a hardware timer IRQ — independent of the network stack, LED logic, and the main loop. A frozen WiFi connection or hung HTTP request cannot prevent a valve from being cut off.
+Each valve has a maximum runtime (`MAX_VALVE_ACTIVE_SECONDS`, default 10 min). Enforcement runs in a hardware timer IRQ — independent of the network stack, LED logic, and the main loop. A frozen WiFi connection or hung HTTP request cannot prevent a valve from being cut off.
+
+A hardware watchdog resets the device if the main loop stalls for longer than `WATCHDOG_TIMEOUT_MS`. On reboot, the device reconnects to WiFi automatically.
 
 ## LED
 
@@ -122,9 +124,8 @@ experimental-features = nix-command flakes
 
 3. Build:
    ```sh
-   mkdir -p build && cd build
-   cmake -G Ninja ..
-   ninja
+   nix develop --command cmake -B build -G Ninja
+   nix develop --command ninja -C build
    ```
 
    The firmware will be at `build/pico_water.uf2`.
@@ -137,4 +138,6 @@ Hold the **BOOTSEL** button on the Pico W, plug it in via USB, then copy the `.u
 cp build/pico_water.uf2 /run/media/$USER/RPI-RP2/
 ```
 
-The board reboots automatically and connects to WiFi. Serial output (USB) shows the assigned IP.
+The board reboots automatically and connects to WiFi.
+
+To see serial output during startup, enable `ENABLE_USB_DEBUG` in `config.h` before flashing — this adds a 2 s delay so the host can enumerate the USB serial device before the first log lines are printed.

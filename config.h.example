@@ -18,7 +18,7 @@
 // E.g. limited by available water pressure and PSU current capacity.
 #define MAX_ACTIVE_VALVES 2
 
-#define MAX_RUNTIME_SECONDS (10 * 60)
+#define MAX_VALVE_ACTIVE_SECONDS (10 * 60)
 
 // How long to wait for a single WiFi connect attempt (ms).
 #define WIFI_CONNECT_TIMEOUT_MS  6000
