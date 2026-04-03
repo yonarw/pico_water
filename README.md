@@ -8,8 +8,8 @@ Valve count, GPIO pins, and names are freely configurable in `config.h`:
 
 ```c
 #define VALVE_COUNT 4
-#define VALVE_PINS  { 2, 3, 4, 5 }
-#define VALVE_NAMES { "rasen_1", "rasen_2", "beete_1", "beete_2" }
+#define VALVE_PINS  2, 3, 4, 5
+#define VALVE_NAMES "rasen_1", "rasen_2", "beete_1", "beete_2"
 ```
 
 GP23/24/25/29 are reserved by the CYW43 WiFi chip and must not be used. Up to the number of usable GP pins is supported.

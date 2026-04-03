@@ -4,8 +4,8 @@
 #include "hardware/gpio.h"
 #include <stdio.h>
 
-static const uint valve_pins[VALVE_COUNT] = VALVE_PINS;
-const char *valve_names[VALVE_COUNT] = VALVE_NAMES;
+static const uint valve_pins[VALVE_COUNT] = { VALVE_PINS };
+const char *valve_names[VALVE_COUNT] = { VALVE_NAMES };
 
 static int32_t  valve_status[VALVE_COUNT];
 static uint32_t valve_runtime[VALVE_COUNT];
