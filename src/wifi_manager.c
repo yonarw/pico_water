@@ -1,5 +1,6 @@
 #include "wifi_manager.h"
 #include "config.h"
+#include "led.h"
 
 #include "pico/cyw43_arch.h"
 #include "lwip/netif.h"
@@ -15,6 +16,7 @@ bool wifi_manager_init(void) {
         printf("wifi: connection failed, retrying...\n");
     }
     printf("wifi: connected\n");
+    led_set_mode(LED_MODE_RUNNING);
     return true;
 }
 
@@ -31,10 +33,12 @@ void wifi_manager_tick(uint32_t now_ms) {
         printf("wifi: IP lost, reconnecting...\n");
     else
         printf("wifi: link lost, reconnecting...\n");
+    led_set_mode(LED_MODE_CONNECTING);
     if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD,
                                            CYW43_AUTH_WPA2_AES_PSK,
                                            WIFI_CONNECT_TIMEOUT_MS) == 0) {
         printf("wifi: reconnected\n");
+        led_set_mode(LED_MODE_RUNNING);
     } else {
         printf("wifi: reconnection failed, retrying in %d s\n",
                WIFI_RECONNECT_INTERVAL_MS / 1000);
