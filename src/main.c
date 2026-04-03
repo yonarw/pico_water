@@ -1,15 +1,32 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"
+#include "hardware/watchdog.h"
+#include "lwip/netif.h"
 
 #include "config.h"
+#include "config_validate.h"
 #include "gpio_control.h"
 #include "rest_api.h"
 #include "led.h"
 #include "wifi_manager.h"
 #include "status.h"
 #include "log_buffer.h"
-#include "lwip/netif.h"
+
+extern char __StackLimit;
+#define STACK_CANARY 0xDEADC0DEu
+
+static inline void stack_canary_init(void) {
+    *(volatile uint32_t *)&__StackLimit = STACK_CANARY;
+}
+
+static inline void stack_canary_check(void) {
+    if (*(volatile uint32_t *)&__StackLimit != STACK_CANARY) {
+        printf("pico_water: stack overflow detected, rebooting...\n");
+        watchdog_reboot(0, 0, 100);
+        while (true) tight_loop_contents();
+    }
+}
 
 static bool tick_callback(repeating_timer_t *rt) {
     (void)rt;
@@ -20,22 +37,30 @@ static bool tick_callback(repeating_timer_t *rt) {
 int main(void) {
     stdio_init_all();
     log_buffer_init();
-    sleep_ms(2000);  // allow USB serial to enumerate before first printf
+#ifdef ENABLE_USB_DEBUG
+    sleep_ms(2000);
+#endif
+    stack_canary_init();
+
+    if (watchdog_caused_reboot())
+        printf("pico_water: rebooted by watchdog\n");
+
+    watchdog_enable(WATCHDOG_TIMEOUT_MS, true);
 
     printf("pico_water: starting\n");
 
     gpio_control_init();
 
     if (cyw43_arch_init()) {
-        printf("pico_water: WiFi init failed\n");
-        return 1;
+        printf("pico_water: WiFi init failed, rebooting...\n");
+        watchdog_reboot(0, 0, 2000);
+        while (true) tight_loop_contents();
     }
     led_init();
     cyw43_arch_enable_sta_mode();
     netif_set_hostname(netif_default, HOSTNAME);
 
-    if (!wifi_manager_init())
-        return 1;
+    wifi_manager_init();
 
     status_init();
     rest_api_init();
@@ -46,6 +71,8 @@ int main(void) {
     printf("pico_water: running\n");
 
     while (true) {
+        watchdog_update();
+        stack_canary_check();
         cyw43_arch_poll();
         uint32_t now = to_ms_since_boot(get_absolute_time());
         wifi_manager_tick(now);

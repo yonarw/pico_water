@@ -42,7 +42,10 @@ target_link_libraries(pico_water
     pico_stdlib
     pico_cyw43_arch_lwip_threadsafe_background
     hardware_adc
+    hardware_watchdog
 )
+
+target_compile_options(pico_water PRIVATE -fstack-usage)
 
 # Output over USB serial; disable UART to keep pin 0/1 free
 pico_enable_stdio_usb(pico_water 1)

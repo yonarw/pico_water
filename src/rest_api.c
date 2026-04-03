@@ -88,9 +88,14 @@ static void send_response_impl(struct tcp_pcb *tpcb, int status,
         "Connection: close\r\n"
         "\r\n",
         status, status_reason(status), content_type, blen);
-    tcp_write(tpcb, hdr, (u16_t)hlen, TCP_WRITE_FLAG_COPY | TCP_WRITE_FLAG_MORE);
-    if (blen > 0)
-        tcp_write(tpcb, body, (u16_t)blen, TCP_WRITE_FLAG_COPY);
+    if (tcp_write(tpcb, hdr, (u16_t)hlen, TCP_WRITE_FLAG_COPY | TCP_WRITE_FLAG_MORE) != ERR_OK) {
+        printf("rest_api: tcp_write failed\n");
+        return;
+    }
+    if (blen > 0 && tcp_write(tpcb, body, (u16_t)blen, TCP_WRITE_FLAG_COPY) != ERR_OK) {
+        printf("rest_api: tcp_write failed\n");
+        return;
+    }
     tcp_output(tpcb);
 }
 
