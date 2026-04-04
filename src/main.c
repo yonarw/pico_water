@@ -78,6 +78,7 @@ int main(void) {
         wifi_manager_tick(now);
         led_tick(now);
         rest_api_tick(now);
+        status_tick(now);
         sleep_ms(1);
     }
 }

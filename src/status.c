@@ -10,9 +10,21 @@
 #define FW_VERSION "unknown"
 #endif
 
+#define RSSI_UPDATE_INTERVAL_MS 30000
+
+static int32_t  cached_rssi      = 0;
+static uint32_t next_rssi_update = 0;
+
 void status_init(void) {
     adc_init();
     adc_set_temp_sensor_enabled(true);
+}
+
+void status_tick(uint32_t now_ms) {
+    if ((int32_t)(now_ms - next_rssi_update) < 0)
+        return;
+    cyw43_wifi_get_rssi(&cyw43_state, &cached_rssi);
+    next_rssi_update = now_ms + RSSI_UPDATE_INTERVAL_MS;
 }
 
 static float read_temp_c(void) {
@@ -23,9 +35,6 @@ static float read_temp_c(void) {
 }
 
 void status_get_json(char *buf, size_t size) {
-    int32_t rssi = 0;
-    cyw43_wifi_get_rssi(&cyw43_state, &rssi);
-
     float temp      = read_temp_c();
     int   temp_i    = (int)temp;
     int   temp_frac = (int)((temp - (float)temp_i) * 10.0f);
@@ -37,7 +46,7 @@ void status_get_json(char *buf, size_t size) {
         "{\"version\":\"%s\",\"uptime_s\":%u,\"rssi_dbm\":%d,\"temp_c\":%d.%d,\"active_valves\":%d}",
         FW_VERSION,
         (unsigned int)uptime_s,
-        (int)rssi,
+        (int)cached_rssi,
         temp_i, temp_frac,
         valve_active_count());
 }
