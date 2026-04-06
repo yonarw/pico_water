@@ -2,7 +2,7 @@
 
 #include <stddef.h>
 
-#define LOG_BUFFER_SIZE 512
+#define LOG_BUFFER_SIZE 4096
 
 // Register the log capture driver with pico stdio. Call after stdio_init_all().
 void log_buffer_init(void);

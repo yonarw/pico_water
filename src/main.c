@@ -4,6 +4,8 @@
 #include "hardware/watchdog.h"
 #include "lwip/netif.h"
 
+#include "pico/bootrom.h"
+
 #include "config.h"
 #include "config_validate.h"
 #include "gpio_control.h"
@@ -25,6 +27,20 @@ static inline void stack_canary_check(void) {
         printf("pico_water: stack overflow detected, rebooting...\n");
         watchdog_reboot(0, 0, 100);
         while (true) tight_loop_contents();
+    }
+}
+
+static void check_usb_bootsel(void) {
+    static const char magic[] = "BOOTSEL\n";
+    static uint8_t pos = 0;
+    int c = getchar_timeout_us(0);
+    if (c < 0) return;
+    if (c == magic[pos]) {
+        pos++;
+        if (magic[pos] == '\0')
+            reset_usb_boot(0, 0);
+    } else {
+        pos = (c == magic[0]) ? 1 : 0;
     }
 }
 
@@ -79,6 +95,7 @@ int main(void) {
         led_tick(now);
         rest_api_tick(now);
         status_tick(now);
+        check_usb_bootsel();
         sleep_ms(1);
     }
 }

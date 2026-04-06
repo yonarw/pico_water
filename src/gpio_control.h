@@ -13,7 +13,6 @@ extern const char *valve_names[VALVE_COUNT];
 
 void    gpio_control_init(void);
 bool    valve_turn_on(valve_id_t id);
-bool    valve_turn_on_timed(valve_id_t id, int32_t seconds);
 void    valve_turn_off(valve_id_t id);
 void    valve_turn_off_all(void);
 int32_t valve_get_status(valve_id_t id);

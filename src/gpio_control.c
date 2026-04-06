@@ -41,18 +41,6 @@ bool valve_turn_on(valve_id_t id) {
     return true;
 }
 
-bool valve_turn_on_timed(valve_id_t id, int32_t seconds) {
-    if (valve_status[id] == VALVE_STATUS_OFF && valve_active_count() >= MAX_ACTIVE_VALVES) {
-        printf("valve %s: ON denied, max simultaneous valves (%d) reached\n", valve_names[id], MAX_ACTIVE_VALVES);
-        return false;
-    }
-    valve_status[id]  = seconds;
-    valve_runtime[id] = 0;
-    gpio_put(valve_pins[id], 1);
-    printf("valve %s: ON for %d s\n", valve_names[id], seconds);
-    return true;
-}
-
 void valve_turn_off(valve_id_t id) {
     gpio_put(valve_pins[id], 0);
     printf("valve %s: OFF (ran %u s)\n", valve_names[id], valve_runtime[id]);
@@ -81,14 +69,6 @@ void valve_tick(void) {
         if (valve_runtime[i] >= (uint32_t)MAX_VALVE_ACTIVE_SECONDS) {
             printf("valve %s: MAX_RUNTIME exceeded, forcing off\n", valve_names[i]);
             valve_turn_off((valve_id_t)i);
-            continue;
-        }
-
-        if (valve_status[i] > 0) {
-            valve_status[i]--;
-            if (valve_status[i] == 0) {
-                valve_turn_off((valve_id_t)i);
-            }
         }
     }
 }
