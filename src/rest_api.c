@@ -112,6 +112,9 @@ static void pump_tx(http_conn_t *conn) {
         conn->tx_body_written += chunk;
     }
     tcp_output(conn->pcb);
+    // All data queued into lwIP (TCP_WRITE_FLAG_COPY) — the source buffer is
+    // no longer needed since lwIP owns its own copy.
+    conn->tx_body = NULL;
 }
 
 static void send_response_impl(http_conn_t *conn, int status,

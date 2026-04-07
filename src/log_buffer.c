@@ -26,15 +26,34 @@ static void write_ring(const char *buf, int len) {
         used = (uint16_t)(used + len);
 }
 
-static void log_out_chars(const char *buf, int len) {
-    char prefix[20];
-    uint32_t ms = to_ms_since_boot(get_absolute_time());
-    int plen = snprintf(prefix, sizeof(prefix), "%5lu.%03lu | ", ms / 1000, ms % 1000);
+static bool at_line_start = true;
 
-    uint32_t save = save_and_disable_interrupts();
-    write_ring(prefix, plen);
-    write_ring(buf, len);
-    restore_interrupts(save);
+static void log_out_chars(const char *buf, int len) {
+    const char *p = buf;
+    const char *end = buf + len;
+
+    while (p < end) {
+        if (at_line_start) {
+            char prefix[20];
+            uint32_t ms = to_ms_since_boot(get_absolute_time());
+            int plen = snprintf(prefix, sizeof(prefix), "%5lu.%03lu | ", ms / 1000, ms % 1000);
+            uint32_t save = save_and_disable_interrupts();
+            write_ring(prefix, plen);
+            restore_interrupts(save);
+            at_line_start = false;
+        }
+
+        const char *nl = memchr(p, '\n', end - p);
+        int chunk = nl ? (int)(nl - p + 1) : (int)(end - p);
+
+        uint32_t save = save_and_disable_interrupts();
+        write_ring(p, chunk);
+        restore_interrupts(save);
+
+        if (nl)
+            at_line_start = true;
+        p += chunk;
+    }
 }
 
 static stdio_driver_t log_driver = {

@@ -27,3 +27,8 @@
 // Hardware watchdog timeout (ms). Must be longer than WIFI_CONNECT_TIMEOUT_MS
 // so a single blocked connect attempt cannot trigger a spurious reset.
 #define WATCHDOG_TIMEOUT_MS 8000
+
+// Size of the in-memory log ring buffer (bytes).
+// Must not exceed TCP_SND_BUF in lwipopts.h, or the log endpoint will return
+// "log busy" responses. TCP_SND_BUF defaults to 8 * TCP_MSS = 11680 bytes.
+#define LOG_BUFFER_SIZE 4096
