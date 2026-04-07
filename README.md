@@ -101,7 +101,7 @@ template:
 
 ### Prerequisites
 
-[Nix](https://nixos.org/) with flakes enabled. No other dependencies needed — the flake provides the ARM toolchain, CMake, Ninja, and the pico-sdk.
+[Nix](https://nixos.org/) with flakes enabled. No other dependencies needed — the flake provides the ARM toolchain, CMake, Ninja, picotool, and the pico-sdk.
 
 To enable flakes if not already active, add to `~/.config/nix/nix.conf`:
 ```
@@ -144,7 +144,7 @@ The board reboots automatically and connects to WiFi.
 
 #### USB update (firmware already running)
 
-The firmware listens for `BOOTSEL\n` on the USB serial port and calls `reset_usb_boot()` when received. Run the helper script to trigger this and flash in one step:
+`picotool` (available in the dev shell) reboots the running device into BOOTSEL mode over USB, flashes the firmware, and reboots into it — all in one step:
 
 ```sh
 sudo ./flash.sh

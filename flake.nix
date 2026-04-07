@@ -21,6 +21,7 @@
         pkgs.cmake
         pkgs.ninja
         pkgs.python3   # pico-sdk scripts require python
+        pkgs.picotool
       ];
 
       PICO_SDK_PATH    = pico-sdk;
