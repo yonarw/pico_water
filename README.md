@@ -132,6 +132,8 @@ experimental-features = nix-command flakes
 
 ### Flashing
 
+#### Initial flash (no firmware)
+
 Hold the **BOOTSEL** button on the Pico W, plug it in via USB, then copy the `.uf2` file to the mounted drive:
 
 ```sh
@@ -139,5 +141,13 @@ cp build/pico_water.uf2 /run/media/$USER/RPI-RP2/
 ```
 
 The board reboots automatically and connects to WiFi.
+
+#### USB update (firmware already running)
+
+The firmware listens for `BOOTSEL\n` on the USB serial port and calls `reset_usb_boot()` when received. Run the helper script to trigger this and flash in one step:
+
+```sh
+sudo ./flash.sh
+```
 
 To see serial output during startup, enable `ENABLE_USB_DEBUG` in `config.h` before flashing — this adds a 2 s delay so the host can enumerate the USB serial device before the first log lines are printed.
