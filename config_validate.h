@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config.h"
+#include "lwipopts.h"
 
 _Static_assert(WIFI_CONNECT_TIMEOUT_MS < WATCHDOG_TIMEOUT_MS,
     "WIFI_CONNECT_TIMEOUT_MS must be less than WATCHDOG_TIMEOUT_MS");
@@ -26,8 +27,9 @@ _Static_assert(MAX_ACTIVE_VALVES <= VALVE_COUNT,
 _Static_assert(MAX_VALVE_ACTIVE_SECONDS > 0,
     "MAX_VALVE_ACTIVE_SECONDS must be positive");
 
-#include "lwipopts.h"
 _Static_assert(LOG_BUFFER_SIZE > 0,
     "LOG_BUFFER_SIZE must be positive");
 _Static_assert(LOG_BUFFER_SIZE <= TCP_SND_BUF,
     "LOG_BUFFER_SIZE must not exceed TCP_SND_BUF (see lwipopts.h)");
+
+#define CONFIG_VALIDATED

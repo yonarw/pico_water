@@ -1,10 +1,9 @@
 #include "status.h"
 #include "gpio_control.h"
-
-#include "pico/cyw43_arch.h"
 #include "hardware/adc.h"
 #include "pico/time.h"
-#include <stdio.h>
+#include <cyw43.h>
+#include <pico/stdio.h>
 
 #ifndef FW_VERSION
 #define FW_VERSION "unknown"

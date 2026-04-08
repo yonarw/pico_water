@@ -1,9 +1,10 @@
 #include "log_buffer.h"
 
+#include <pico/stdio/driver.h>
 #include <stdio.h>
 #include <string.h>
+#include "config.h"
 #include "pico/stdio.h"
-#include "pico/stdio/driver.h"
 #include "pico/time.h"
 #include "hardware/sync.h"
 
@@ -36,7 +37,7 @@ static void log_out_chars(const char *buf, int len) {
         if (at_line_start) {
             char prefix[20];
             uint32_t ms = to_ms_since_boot(get_absolute_time());
-            int plen = snprintf(prefix, sizeof(prefix), "%5lu.%03lu | ", ms / 1000, ms % 1000);
+            int plen = snprintf(prefix, sizeof(prefix), "%5u.%03u | ", ms / 1000, ms % 1000);
             uint32_t save = save_and_disable_interrupts();
             write_ring(prefix, plen);
             restore_interrupts(save);

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stddef.h>
-#include "config.h"
 
 // Register the log capture driver with pico stdio. Call after stdio_init_all().
 void log_buffer_init(void);

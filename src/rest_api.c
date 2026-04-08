@@ -4,10 +4,10 @@
 #include "status.h"
 #include "log_buffer.h"
 
-#include "lwip/tcp.h"
-#include "pico/time.h"
+#include <lwip/tcp.h>
+#include <pico/time.h>
 #include <string.h>
-#include <stdio.h>
+#include <pico/stdio.h>
 
 #define HTTP_PORT    80
 #define MAX_CONNS     4

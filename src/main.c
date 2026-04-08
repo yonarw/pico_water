@@ -1,5 +1,5 @@
+#include <pico/stdio.h>
 #include <stdio.h>
-#include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"
 #include "hardware/watchdog.h"
 #include "lwip/netif.h"
@@ -12,6 +12,10 @@
 #include "wifi_manager.h"
 #include "status.h"
 #include "log_buffer.h"
+
+#ifndef CONFIG_VALIDATED
+#error "Configuration validation failed! Please fix the issues reported by the static assertions in config_validate.h."
+#endif
 
 extern char __StackLimit;
 #define STACK_CANARY 0xDEADC0DEu
