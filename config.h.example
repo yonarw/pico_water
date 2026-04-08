@@ -1,8 +1,8 @@
 #pragma once
 
-#define WIFI_SSID     "YOUR_SSID"
-#define WIFI_PASSWORD "YOUR_PASSWORD"
-#define HOSTNAME      "pico-water"
+#define WIFI_SSID                  "YOUR_SSID"
+#define WIFI_PASSWORD              "YOUR_PASSWORD"
+#define HOSTNAME                   "pico-water"
 
 // Adds a 2s startup delay so USB serial can enumerate before first output.
 // Only needed when debugging via USB. Keep disabled in production.
@@ -10,25 +10,25 @@
 
 // Number of valves/ports. Must match the lengths of VALVE_PINS and VALVE_NAMES.
 // On Pico W, GP23/GP24/GP25/GP29 are reserved for the CYW43 WiFi chip.
-#define VALVE_COUNT 4
-#define VALVE_PINS  22, 3, 27, 17
-#define VALVE_NAMES "rasen_1", "rasen_2", "beete_1", "beete_2"
+#define VALVE_COUNT                4
+#define VALVE_PINS                 22, 3, 27, 17
+#define VALVE_NAMES                "rasen_1", "rasen_2", "beete_1", "beete_2"
 
 // Maximum number of valves that may be active simultaneously.
 // E.g. limited by available water pressure and PSU current capacity.
-#define MAX_ACTIVE_VALVES 2
+#define MAX_ACTIVE_VALVES          2
 
-#define MAX_VALVE_ACTIVE_SECONDS (10 * 60)
+#define MAX_VALVE_ACTIVE_SECONDS   (10 * 60)
 
 // How long to wait for a single WiFi connect attempt (ms).
-#define WIFI_CONNECT_TIMEOUT_MS  6000
+#define WIFI_CONNECT_TIMEOUT_MS    6000
 // How long to wait before retrying a failed reconnect (ms).
 #define WIFI_RECONNECT_INTERVAL_MS 5000
 // Hardware watchdog timeout (ms). Must be longer than WIFI_CONNECT_TIMEOUT_MS
 // so a single blocked connect attempt cannot trigger a spurious reset.
-#define WATCHDOG_TIMEOUT_MS 8000
+#define WATCHDOG_TIMEOUT_MS        8000
 
 // Size of the in-memory log ring buffer (bytes).
 // Must not exceed TCP_SND_BUF in lwipopts.h, or the log endpoint will return
 // "log busy" responses. TCP_SND_BUF defaults to 8 * TCP_MSS = 11680 bytes.
-#define LOG_BUFFER_SIZE 4096
+#define LOG_BUFFER_SIZE            4096

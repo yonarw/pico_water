@@ -2,17 +2,18 @@
 #include "config.h"
 #include "led.h"
 
-#include "pico/cyw43_arch.h"
 #include "lwip/netif.h"
+#include "pico/cyw43_arch.h"
 #include <stdio.h>
 
 static uint32_t next_reconnect_ms = 0;
 
-bool wifi_manager_init(void) {
+bool wifi_manager_init(void)
+{
     printf("wifi: connecting to %s...\n", WIFI_SSID);
-    while (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD,
-                                              CYW43_AUTH_WPA2_AES_PSK,
-                                              WIFI_CONNECT_TIMEOUT_MS)) {
+    while (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK,
+                                              WIFI_CONNECT_TIMEOUT_MS))
+    {
         printf("wifi: connection failed, retrying...\n");
     }
     printf("wifi: connected\n");
@@ -20,9 +21,10 @@ bool wifi_manager_init(void) {
     return true;
 }
 
-void wifi_manager_tick(uint32_t now_ms) {
+void wifi_manager_tick(uint32_t now_ms)
+{
     bool link_up = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) == CYW43_LINK_JOIN;
-    bool has_ip  = link_up && !ip4_addr_isany(netif_ip4_addr(netif_default));
+    bool has_ip = link_up && !ip4_addr_isany(netif_ip4_addr(netif_default));
     if (has_ip)
         return;
 
@@ -34,14 +36,15 @@ void wifi_manager_tick(uint32_t now_ms) {
     else
         printf("wifi: link lost, reconnecting...\n");
     led_set_mode(LED_MODE_CONNECTING);
-    if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD,
-                                           CYW43_AUTH_WPA2_AES_PSK,
-                                           WIFI_CONNECT_TIMEOUT_MS) == 0) {
+    if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK,
+                                           WIFI_CONNECT_TIMEOUT_MS)
+        == 0)
+    {
         printf("wifi: reconnected\n");
         led_set_mode(LED_MODE_RUNNING);
-    } else {
-        printf("wifi: reconnection failed, retrying in %d s\n",
-               WIFI_RECONNECT_INTERVAL_MS / 1000);
+    } else
+    {
+        printf("wifi: reconnection failed, retrying in %d s\n", WIFI_RECONNECT_INTERVAL_MS / 1000);
         next_reconnect_ms = now_ms + WIFI_RECONNECT_INTERVAL_MS;
     }
 }

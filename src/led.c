@@ -12,8 +12,8 @@
 #define HEARTBEAT_ON_MS      100
 #define HEARTBEAT_PERIOD_MS  2000
 
-#define BLINK_PULSE_MS   80
-#define BLINK_GAP_MS     80
+#define BLINK_PULSE_MS       80
+#define BLINK_GAP_MS         80
 
 typedef enum {
     STATE_HEARTBEAT,
@@ -23,79 +23,88 @@ typedef enum {
     STATE_BLINK2_OFF,
 } led_state_t;
 
-static led_mode_t  mode           = LED_MODE_BOOTING;
-static led_state_t state          = STATE_HEARTBEAT;
-static uint32_t    state_until    = 0;
-static bool        request_queued = false;
+static led_mode_t mode = LED_MODE_BOOTING;
+static led_state_t state = STATE_HEARTBEAT;
+static uint32_t state_until = 0;
+static bool request_queued = false;
 
-static void set_led(bool on) {
-    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, on ? 1 : 0);
-}
+static void set_led(bool on) { cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, on ? 1 : 0); }
 
-void led_init(void) {
-    set_led(false);
-}
+void led_init(void) { set_led(false); }
 
-void led_set_mode(led_mode_t new_mode) {
-    mode        = new_mode;
-    state       = STATE_HEARTBEAT;
+void led_set_mode(led_mode_t new_mode)
+{
+    mode = new_mode;
+    state = STATE_HEARTBEAT;
     state_until = 0;
     request_queued = false;
 }
 
-void led_notify_request(void) {
+void led_notify_request(void)
+{
     if (mode == LED_MODE_RUNNING)
         request_queued = true;
 }
 
 #define after(now, deadline) ((int32_t)((now) - (deadline)) >= 0)
 
-void led_tick(uint32_t now_ms) {
-    switch (state) {
-        case STATE_HEARTBEAT:
-            if (!after(now_ms, state_until)) break;
-
-            if (mode == LED_MODE_RUNNING && request_queued) {
-                request_queued = false;
-                set_led(true);
-                state       = STATE_BLINK1_ON;
-                state_until = now_ms + BLINK_PULSE_MS;
-            } else if (mode == LED_MODE_BOOTING) {
-                set_led(true);
-            } else if (mode == LED_MODE_CONNECTING) {
-                bool on = (now_ms % CONNECTING_PERIOD_MS) < CONNECTING_ON_MS;
-                set_led(on);
-            } else {
-                bool on = (now_ms % HEARTBEAT_PERIOD_MS) < HEARTBEAT_ON_MS;
-                set_led(on);
-            }
+void led_tick(uint32_t now_ms)
+{
+    switch (state)
+    {
+    case STATE_HEARTBEAT:
+        if (!after(now_ms, state_until))
             break;
 
-        case STATE_BLINK1_ON:
-            if (!after(now_ms, state_until)) break;
-            set_led(false);
-            state       = STATE_BLINK1_OFF;
-            state_until = now_ms + BLINK_GAP_MS;
-            break;
-
-        case STATE_BLINK1_OFF:
-            if (!after(now_ms, state_until)) break;
+        if (mode == LED_MODE_RUNNING && request_queued)
+        {
+            request_queued = false;
             set_led(true);
-            state       = STATE_BLINK2_ON;
+            state = STATE_BLINK1_ON;
             state_until = now_ms + BLINK_PULSE_MS;
-            break;
+        } else if (mode == LED_MODE_BOOTING)
+        {
+            set_led(true);
+        } else if (mode == LED_MODE_CONNECTING)
+        {
+            bool on = (now_ms % CONNECTING_PERIOD_MS) < CONNECTING_ON_MS;
+            set_led(on);
+        } else
+        {
+            bool on = (now_ms % HEARTBEAT_PERIOD_MS) < HEARTBEAT_ON_MS;
+            set_led(on);
+        }
+        break;
 
-        case STATE_BLINK2_ON:
-            if (!after(now_ms, state_until)) break;
-            set_led(false);
-            state       = STATE_BLINK2_OFF;
-            state_until = now_ms + BLINK_GAP_MS;
+    case STATE_BLINK1_ON:
+        if (!after(now_ms, state_until))
             break;
+        set_led(false);
+        state = STATE_BLINK1_OFF;
+        state_until = now_ms + BLINK_GAP_MS;
+        break;
 
-        case STATE_BLINK2_OFF:
-            if (!after(now_ms, state_until)) break;
-            state       = STATE_HEARTBEAT;
-            state_until = now_ms;
+    case STATE_BLINK1_OFF:
+        if (!after(now_ms, state_until))
             break;
+        set_led(true);
+        state = STATE_BLINK2_ON;
+        state_until = now_ms + BLINK_PULSE_MS;
+        break;
+
+    case STATE_BLINK2_ON:
+        if (!after(now_ms, state_until))
+            break;
+        set_led(false);
+        state = STATE_BLINK2_OFF;
+        state_until = now_ms + BLINK_GAP_MS;
+        break;
+
+    case STATE_BLINK2_OFF:
+        if (!after(now_ms, state_until))
+            break;
+        state = STATE_HEARTBEAT;
+        state_until = now_ms;
+        break;
     }
 }

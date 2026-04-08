@@ -3,8 +3,8 @@
 #include <stdint.h>
 
 typedef enum {
-    LED_MODE_BOOTING,     // solid on — waiting for first connection
-    LED_MODE_CONNECTING,  // rapid blink — reconnecting after link loss
+    LED_MODE_BOOTING,    // solid on — waiting for first connection
+    LED_MODE_CONNECTING, // rapid blink — reconnecting after link loss
     LED_MODE_RUNNING,
 } led_mode_t;
 

@@ -1,44 +1,48 @@
-#include <pico/stdio.h>
-#include <stdio.h>
-#include "pico/cyw43_arch.h"
 #include "hardware/watchdog.h"
 #include "lwip/netif.h"
+#include "pico/cyw43_arch.h"
+#include <pico/stdio.h>
+#include <stdio.h>
 
 #include "config.h"
 #include "config_validate.h"
 #include "gpio_control.h"
-#include "rest_api.h"
 #include "led.h"
-#include "wifi_manager.h"
-#include "status.h"
 #include "log_buffer.h"
+#include "rest_api.h"
+#include "status.h"
+#include "wifi_manager.h"
 
 #ifndef CONFIG_VALIDATED
-#error "Configuration validation failed! Please fix the issues reported by the static assertions in config_validate.h."
+#error                                                                                             \
+ "Configuration validation failed! Please fix the issues reported by the static assertions in config_validate.h."
 #endif
 
 extern char __StackLimit;
 #define STACK_CANARY 0xDEADC0DEu
 
-static inline void stack_canary_init(void) {
-    *(volatile uint32_t *)&__StackLimit = STACK_CANARY;
-}
+static inline void stack_canary_init(void) { *(volatile uint32_t*)&__StackLimit = STACK_CANARY; }
 
-static inline void stack_canary_check(void) {
-    if (*(volatile uint32_t *)&__StackLimit != STACK_CANARY) {
+static inline void stack_canary_check(void)
+{
+    if (*(volatile uint32_t*)&__StackLimit != STACK_CANARY)
+    {
         printf("pico_water: stack overflow detected, rebooting...\n");
         watchdog_reboot(0, 0, 100);
-        while (true) tight_loop_contents();
+        while (true)
+            tight_loop_contents();
     }
 }
 
-static bool tick_callback(repeating_timer_t *rt) {
+static bool tick_callback(repeating_timer_t* rt)
+{
     (void)rt;
     valve_tick();
     return true;
 }
 
-int main(void) {
+int main(void)
+{
     stdio_init_all();
     log_buffer_init();
 #ifdef ENABLE_USB_DEBUG
@@ -55,10 +59,12 @@ int main(void) {
 
     gpio_control_init();
 
-    if (cyw43_arch_init()) {
+    if (cyw43_arch_init())
+    {
         printf("pico_water: WiFi init failed, rebooting...\n");
         watchdog_reboot(0, 0, 2000);
-        while (true) tight_loop_contents();
+        while (true)
+            tight_loop_contents();
     }
     led_init();
     cyw43_arch_enable_sta_mode();
@@ -74,7 +80,8 @@ int main(void) {
 
     printf("pico_water: running\n");
 
-    while (true) {
+    while (true)
+    {
         watchdog_update();
         stack_canary_check();
         cyw43_arch_poll();

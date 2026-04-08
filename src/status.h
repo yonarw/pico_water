@@ -11,4 +11,4 @@ void status_init(void);
 void status_tick(uint32_t now_ms);
 
 // Write a JSON status object into buf (null-terminated).
-void status_get_json(char *buf, size_t size);
+void status_get_json(char* buf, size_t size);
