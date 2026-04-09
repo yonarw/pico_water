@@ -7,7 +7,7 @@
 
 // Memory
 #define MEM_ALIGNMENT              4
-#define MEM_SIZE                   4000
+#define MEM_SIZE                   8000
 #define MEMP_NUM_TCP_SEG           32
 #define PBUF_POOL_SIZE             24
 #define TCP_MSS                    1460

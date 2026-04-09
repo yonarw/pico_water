@@ -29,6 +29,8 @@
 #define WATCHDOG_TIMEOUT_MS        8000
 
 // Size of the in-memory log ring buffer (bytes).
-// Must not exceed TCP_SND_BUF in lwipopts.h, or the log endpoint will return
-// "log busy" responses. TCP_SND_BUF defaults to 8 * TCP_MSS = 11680 bytes.
+// Must not exceed MEM_SIZE in lwipopts.h (lwIP heap), because tcp_write copies
+// the snapshot into TCP segments allocated from that heap. With LOG_BUFFER_SIZE=4096
+// and three 1460-byte segments, ~4440 bytes of heap are needed. MEM_SIZE=8000 leaves
+// comfortable headroom. Also keep LOG_BUFFER_SIZE below TCP_SND_BUF (default 11680).
 #define LOG_BUFFER_SIZE            4096

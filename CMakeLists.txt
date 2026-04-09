@@ -46,6 +46,7 @@ target_link_libraries(pico_water
 )
 
 target_compile_options(pico_water PRIVATE -fstack-usage)
+target_compile_definitions(pico_water PRIVATE PICO_STACK_SIZE=4096)
 
 # Output over USB serial; disable UART to keep pin 0/1 free
 pico_enable_stdio_usb(pico_water 1)
