@@ -10,7 +10,7 @@
 #include <string.h>
 
 #define HTTP_PORT       80
-#define MAX_CONNS       4
+#define MAX_CONNS       8
 #define REQ_BUF_SIZE    512
 
 #define CONN_TIMEOUT_MS 5000
