@@ -96,51 +96,62 @@ static const char* status_reason(int status)
     }
 }
 
+static void close_conn(struct tcp_pcb* tpcb, http_conn_t* conn);
+
 // Write as many pending TX bytes as the send buffer currently allows.
 // Called once to start a response and again from http_sent as ACKs free space.
-static void pump_tx(http_conn_t* conn)
+// Closes the connection and returns false if tcp_write fails.
+static bool pump_tx(http_conn_t* conn)
 {
     while (conn->tx_hdr_written < conn->tx_hdr_len)
     {
         u16_t avail = tcp_sndbuf(conn->pcb);
         if (avail == 0)
-            return;
+            return true;
         u16_t todo = conn->tx_hdr_len - conn->tx_hdr_written;
         u16_t chunk = todo < avail ? todo : avail;
         bool more = (conn->tx_hdr_written + chunk < conn->tx_hdr_len)
                     || (conn->tx_body_written < conn->tx_body_len);
         u8_t flags = TCP_WRITE_FLAG_COPY | (more ? TCP_WRITE_FLAG_MORE : 0);
         if (tcp_write(conn->pcb, conn->tx_hdr + conn->tx_hdr_written, chunk, flags) != ERR_OK)
-            return;
+        {
+            printf("rest_api: tcp_write failed, closing connection\n");
+            close_conn(conn->pcb, conn);
+            return false;
+        }
         conn->tx_hdr_written += chunk;
     }
     while (conn->tx_body_written < conn->tx_body_len)
     {
         u16_t avail = tcp_sndbuf(conn->pcb);
         if (avail == 0)
-            return;
+            return true;
         int todo = conn->tx_body_len - conn->tx_body_written;
         u16_t chunk = (todo < (int)avail) ? (u16_t)todo : avail;
         bool more = (conn->tx_body_written + chunk < conn->tx_body_len);
         u8_t flags = TCP_WRITE_FLAG_COPY | (more ? TCP_WRITE_FLAG_MORE : 0);
         if (tcp_write(conn->pcb, conn->tx_body + conn->tx_body_written, chunk, flags) != ERR_OK)
-            return;
+        {
+            printf("rest_api: tcp_write failed, closing connection\n");
+            close_conn(conn->pcb, conn);
+            return false;
+        }
         conn->tx_body_written += chunk;
     }
     tcp_output(conn->pcb);
     // All data queued into lwIP (TCP_WRITE_FLAG_COPY) — the source buffer is
     // no longer needed since lwIP owns its own copy.
     conn->tx_body = NULL;
+    return true;
 }
 
 static void send_response_impl(http_conn_t* conn, int status, const char* content_type,
                                const char* body, int blen)
 {
     conn->tx_hdr_len = (uint16_t)snprintf(conn->tx_hdr, sizeof(conn->tx_hdr),
-                                          "HTTP/1.1 %d %s\r\n"
+                                          "HTTP/1.0 %d %s\r\n"
                                           "Content-Type: %s\r\n"
                                           "Content-Length: %d\r\n"
-                                          "Connection: close\r\n"
                                           "\r\n",
                                           status, status_reason(status), content_type, blen);
     conn->tx_hdr_written = 0;
@@ -289,7 +300,8 @@ static err_t http_sent(void* arg, struct tcp_pcb* tpcb, u16_t len)
 {
     http_conn_t* conn = (http_conn_t*)arg;
     conn->tx_bytes_acked += len;
-    pump_tx(conn);
+    if (!pump_tx(conn))
+        return ERR_OK; // pump_tx already closed the connection
     bool all_written =
      (conn->tx_hdr_written == conn->tx_hdr_len) && (conn->tx_body_written == conn->tx_body_len);
     uint32_t total = (uint32_t)conn->tx_hdr_len + (uint32_t)conn->tx_body_len;
