@@ -23,4 +23,8 @@ _Static_assert(LOG_BUFFER_SIZE > 0, "LOG_BUFFER_SIZE must be positive");
 _Static_assert(LOG_BUFFER_SIZE <= TCP_SND_BUF,
                "LOG_BUFFER_SIZE must not exceed TCP_SND_BUF (see lwipopts.h)");
 
+_Static_assert(MQTT_BROKER_PORT > 0 && MQTT_BROKER_PORT <= 65535,
+               "MQTT_BROKER_PORT must be in range 1–65535");
+_Static_assert(MQTT_STATUS_INTERVAL_MS > 0, "MQTT_STATUS_INTERVAL_MS must be positive");
+
 #define CONFIG_VALIDATED

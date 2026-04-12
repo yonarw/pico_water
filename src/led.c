@@ -40,7 +40,7 @@ void led_set_mode(led_mode_t new_mode)
     request_queued = false;
 }
 
-void led_notify_request(void)
+void led_notify_activity(void)
 {
     if (mode == LED_MODE_RUNNING)
         request_queued = true;

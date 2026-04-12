@@ -1,8 +1,6 @@
 #include "rest_api.h"
-#include "gpio_control.h"
-#include "led.h"
+#include "config.h"
 #include "log_buffer.h"
-#include "status.h"
 
 #include <lwip/tcp.h>
 #include <pico/stdio.h>
@@ -75,16 +73,6 @@ void rest_api_tick(uint32_t now_ms)
     }
 }
 
-static valve_id_t find_valve(const char* name)
-{
-    for (int i = 0; i < VALVE_COUNT; i++)
-    {
-        if (strcmp(valve_names[i], name) == 0)
-            return (valve_id_t)i;
-    }
-    return (valve_id_t)-1;
-}
-
 static const char* status_reason(int status)
 {
     switch (status)
@@ -152,6 +140,7 @@ static void send_response_impl(http_conn_t* conn, int status, const char* conten
                                           "HTTP/1.0 %d %s\r\n"
                                           "Content-Type: %s\r\n"
                                           "Content-Length: %d\r\n"
+                                          "Connection: close\r\n"
                                           "\r\n",
                                           status, status_reason(status), content_type, blen);
     conn->tx_hdr_written = 0;
@@ -175,17 +164,13 @@ static void handle_request(http_conn_t* conn)
 {
     char* req = conn->buf;
 
-    // Parse method
-    bool is_post = (strncmp(req, "POST ", 5) == 0);
-    bool is_get = (strncmp(req, "GET ", 4) == 0);
-    if (!is_post && !is_get)
+    if (strncmp(req, "GET ", 4) != 0)
     {
         send_response(conn, 400, "bad request");
         return;
     }
 
-    // Extract path between method and " HTTP"
-    char* path_start = req + (is_post ? 5 : 4);
+    char* path_start = req + 4;
     char* path_end = strstr(path_start, " HTTP");
     if (!path_end)
     {
@@ -199,69 +184,7 @@ static void handle_request(http_conn_t* conn)
     memcpy(path, path_start, path_len);
     path[path_len] = '\0';
 
-    // Route: GET /switch/state/{name}
-    if (is_get && strncmp(path, "/switch/state/", 14) == 0)
-    {
-        valve_id_t id = find_valve(path + 14);
-        if (id == (valve_id_t)-1)
-        {
-            send_response(conn, 404, "not found");
-            return;
-        }
-        led_notify_request();
-        send_response(conn, 200, valve_get_status(id) != VALVE_STATUS_OFF ? "on" : "off");
-        return;
-    }
-
-    // Route: POST /switch/{name}
-    if (is_post && strncmp(path, "/switch/", 8) == 0)
-    {
-        valve_id_t id = find_valve(path + 8);
-        if (id == (valve_id_t)-1)
-        {
-            send_response(conn, 404, "not found");
-            return;
-        }
-        char* body = strstr(req, "\r\n\r\n");
-        if (!body)
-        {
-            send_response(conn, 400, "bad request");
-            return;
-        }
-        body += 4;
-        if (strncmp(body, "on", 2) == 0)
-        {
-            if (!valve_turn_on(id))
-            {
-                send_response(conn, 503, "too many active valves");
-                return;
-            }
-            led_notify_request();
-            send_response(conn, 200, "ok");
-        } else if (strncmp(body, "off", 3) == 0)
-        {
-            valve_turn_off(id);
-            led_notify_request();
-            send_response(conn, 200, "ok");
-        } else
-        {
-            send_response(conn, 400, "expected 'on' or 'off'");
-        }
-        return;
-    }
-
-    // Route: GET /status
-    if (is_get && strcmp(path, "/status") == 0)
-    {
-        // conn->buf is no longer needed for the request; reuse it for the body
-        // so it stays alive until the response is fully sent.
-        status_get_json(conn->buf, sizeof(conn->buf));
-        send_response_impl(conn, 200, "application/json", conn->buf, (int)strlen(conn->buf));
-        return;
-    }
-
-    // Route: GET /log
-    if (is_get && strcmp(path, "/log") == 0)
+    if (strcmp(path, "/log") == 0)
     {
         static char snap[LOG_BUFFER_SIZE];
         for (int i = 0; i < MAX_CONNS; i++)

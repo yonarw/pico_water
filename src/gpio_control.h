@@ -21,3 +21,8 @@ int valve_active_count(void);
 
 // Call once per second from the main tick
 void valve_tick(void);
+
+// Register a callback invoked whenever a valve turns on or off.
+// Called from both the main loop and the 1 Hz timer IRQ; keep it short.
+typedef void (*valve_state_change_cb_t)(valve_id_t id);
+void gpio_control_set_state_change_cb(valve_state_change_cb_t cb);

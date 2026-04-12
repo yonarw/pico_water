@@ -39,6 +39,10 @@
 #define DHCP_DOES_ARP_CHECK        0
 #define LWIP_DHCP_DOES_ACD_CHECK   0
 
+// MQTT output ring buffer must be >= the largest MQTT message we publish.
+// Largest message is a discovery payload (~350 bytes) plus topic + header overhead.
+#define MQTT_OUTPUT_RINGBUF_SIZE   1024
+
 // Stats (disabled in release)
 #define MEM_STATS                  0
 #define SYS_STATS                  0

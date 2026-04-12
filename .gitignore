@@ -10,3 +10,6 @@ config.h
 # Editor
 .vscode/
 *.swp
+
+# Work in progress
+wip/

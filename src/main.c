@@ -9,8 +9,8 @@
 #include "gpio_control.h"
 #include "led.h"
 #include "log_buffer.h"
+#include "mqtt_manager.h"
 #include "rest_api.h"
-#include "status.h"
 #include "wifi_manager.h"
 
 #ifndef CONFIG_VALIDATED
@@ -72,7 +72,7 @@ int main(void)
 
     wifi_manager_init();
 
-    status_init();
+    mqtt_manager_init();
     rest_api_init();
 
     repeating_timer_t timer;
@@ -89,7 +89,7 @@ int main(void)
         wifi_manager_tick(now);
         led_tick(now);
         rest_api_tick(now);
-        status_tick(now);
+        mqtt_manager_tick(now);
         sleep_ms(1);
     }
 }

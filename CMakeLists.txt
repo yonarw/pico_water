@@ -27,7 +27,7 @@ add_executable(pico_water
     src/rest_api.c
     src/led.c
     src/wifi_manager.c
-    src/status.c
+    src/mqtt_manager.c
     src/log_buffer.c
 )
 
@@ -41,6 +41,7 @@ target_compile_definitions(pico_water PRIVATE FW_VERSION="${GIT_VERSION}")
 target_link_libraries(pico_water
     pico_stdlib
     pico_cyw43_arch_lwip_threadsafe_background
+    pico_lwip_mqtt
     hardware_adc
     hardware_watchdog
 )

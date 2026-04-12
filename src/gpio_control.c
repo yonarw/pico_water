@@ -9,6 +9,12 @@ const char* valve_names[VALVE_COUNT] = { VALVE_NAMES };
 
 static int32_t valve_status[VALVE_COUNT];
 static uint32_t valve_runtime[VALVE_COUNT];
+static valve_state_change_cb_t s_state_change_cb = NULL;
+
+void gpio_control_set_state_change_cb(valve_state_change_cb_t cb)
+{
+    s_state_change_cb = cb;
+}
 
 int valve_active_count(void)
 {
@@ -46,6 +52,8 @@ bool valve_turn_on(valve_id_t id)
     valve_runtime[id] = 0;
     gpio_put(valve_pins[id], 1);
     printf("valve %s: ON (permanent)\n", valve_names[id]);
+    if (s_state_change_cb)
+        s_state_change_cb(id);
     return true;
 }
 
@@ -55,6 +63,8 @@ void valve_turn_off(valve_id_t id)
     printf("valve %s: OFF (ran %u s)\n", valve_names[id], valve_runtime[id]);
     valve_status[id] = VALVE_STATUS_OFF;
     valve_runtime[id] = 0;
+    if (s_state_change_cb)
+        s_state_change_cb(id);
 }
 
 void valve_turn_off_all(void)
