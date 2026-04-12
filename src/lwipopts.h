@@ -43,6 +43,10 @@
 // Largest message is a discovery payload (~350 bytes) plus topic + header overhead.
 #define MQTT_OUTPUT_RINGBUF_SIZE   1024
 
+// Default MEMP_NUM_SYS_TIMEOUT is auto-computed from enabled features (~6), but
+// the MQTT cyclic keep-alive timer and cyw43 driver timers exceed that. 16 is safe.
+#define MEMP_NUM_SYS_TIMEOUT       16
+
 // Stats (disabled in release)
 #define MEM_STATS                  0
 #define SYS_STATS                  0
