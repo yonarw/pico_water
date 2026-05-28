@@ -7,6 +7,7 @@
 #include "lwip/dns.h"
 #include "pico/cyw43_arch.h"
 #include "hardware/adc.h"
+#include "hardware/watchdog.h"
 #include "pico/time.h"
 
 #include <stdio.h>
@@ -275,6 +276,18 @@ static void on_incoming_data(void* arg, const u8_t* data, u16_t len, u8_t flags)
         return;
     }
 
+    if (strcmp(s_inpub_topic, MQTT_TOPIC_PREFIX "/reboot") == 0)
+    {
+        if (strcmp(s_inpub_payload, "1") == 0)
+        {
+            printf("mqtt: reboot requested\n");
+            watchdog_reboot(0, 0, 100);
+            while (true)
+                tight_loop_contents();
+        }
+        return;
+    }
+
     printf("mqtt: unhandled topic '%s'\n", s_inpub_topic);
 }
 
@@ -306,6 +319,7 @@ static void on_connect(mqtt_client_t* client, void* arg, mqtt_connection_status_
         snprintf(topic, sizeof(topic), MQTT_TOPIC_PREFIX "/valve/%s/set", valve_names[i]);
         mqtt_sub_unsub(client, topic, 1 /* qos */, NULL, NULL, 1 /* subscribe */);
     }
+    mqtt_sub_unsub(client, MQTT_TOPIC_PREFIX "/reboot", 1, NULL, NULL, 1);
 
     s_boot_idx = 0;
 }

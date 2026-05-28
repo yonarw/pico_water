@@ -23,7 +23,9 @@
 // How long to wait for a single WiFi connect attempt (ms).
 #define WIFI_CONNECT_TIMEOUT_MS    6000
 // How long to wait before retrying a failed reconnect (ms).
-#define WIFI_RECONNECT_INTERVAL_MS 5000
+#define WIFI_RECONNECT_INTERVAL_MS   5000
+// Number of consecutive reconnect failures before forcing a watchdog reboot.
+#define WIFI_MAX_RECONNECT_ATTEMPTS  10
 // Hardware watchdog timeout (ms). Must be longer than WIFI_CONNECT_TIMEOUT_MS
 // so a single blocked connect attempt cannot trigger a spurious reset.
 #define WATCHDOG_TIMEOUT_MS        8000

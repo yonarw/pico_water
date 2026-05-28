@@ -6,6 +6,7 @@
 _Static_assert(WIFI_CONNECT_TIMEOUT_MS < WATCHDOG_TIMEOUT_MS,
                "WIFI_CONNECT_TIMEOUT_MS must be less than WATCHDOG_TIMEOUT_MS");
 _Static_assert(WIFI_RECONNECT_INTERVAL_MS > 0, "WIFI_RECONNECT_INTERVAL_MS must be positive");
+_Static_assert(WIFI_MAX_RECONNECT_ATTEMPTS > 0, "WIFI_MAX_RECONNECT_ATTEMPTS must be at least 1");
 _Static_assert(WATCHDOG_TIMEOUT_MS >= 1000, "WATCHDOG_TIMEOUT_MS must be at least 1000 ms");
 
 _Static_assert(VALVE_COUNT > 0, "VALVE_COUNT must be at least 1");
