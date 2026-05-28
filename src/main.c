@@ -59,6 +59,7 @@ int main(void)
 
     gpio_control_init();
 
+    watchdog_update();
     if (cyw43_arch_init())
     {
         printf("pico_water: WiFi init failed, rebooting...\n");
